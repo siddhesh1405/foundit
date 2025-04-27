@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <title>Review Answer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/review_answer.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-database-compat.js"></script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">FoundIt!</a>
+        </div>
+      </div>
+    </nav>
+    <a href="review_item.html">
+      <button class="btn2 btn-primary">Back</button>
+    </a>
+
+    <div class="card">
+      <h1>Review Answers</h1>
+      <br />
+      <form id="questionForm" class="form-horizontal">
+        <div class="form-group">
+          <label class="control-label" for="que1">Loading...</label>
+          <input type="text" class="form-control" id="que1" readonly />
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="que2">Loading...</label>
+          <input type="text" class="form-control" id="que2" readonly />
+        </div>
+        <div class="form-group">
+          <label class="control-label" for="que3">Loading...</label>
+          <input type="text" class="form-control" id="que3" readonly />
+        </div>
+
+        <div class="form-group text-center">
+          <button class="btn btn-success" id="verifyBtn">
+            ✅ Verify Owner
+          </button>
+          <button class="btn btn-danger" id="rejectBtn">❌ Reject</button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+        measurementId: "G-0VTTZPM3XE",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const auth = firebase.auth();
+
+      const params = new URLSearchParams(window.location.search);
+      const itemId = params.get("itemId");
+      const claimId = params.get("claimId");
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) return (window.location.href = "login.html");
+
+        const itemRef = db.ref("returnedItems/" + itemId);
+        const claimRef = db.ref("claimRequests/" + itemId + "/" + claimId);
+
+        try {
+          const [itemSnap, claimSnap] = await Promise.all([
+            itemRef.get(),
+            claimRef.get(),
+          ]);
+
+          if (!itemSnap.exists() || !claimSnap.exists())
+            return alert("Invalid data");
+
+          const item = itemSnap.val();
+          const claim = claimSnap.val();
+
+          if (item.uid !== user.uid) return alert("Unauthorized");
+
+          // Show Questions
+          document.querySelector('label[for="que1"]').innerText =
+            item.question1;
+          document.querySelector('label[for="que2"]').innerText =
+            item.question2;
+          document.querySelector('label[for="que3"]').innerText =
+            item.question3;
+
+          // Show Answers
+          document.getElementById("que1").value = claim.answer1;
+          document.getElementById("que2").value = claim.answer2;
+          document.getElementById("que3").value = claim.answer3;
+
+          // ✅ VERIFY
+          document.getElementById("verifyBtn").onclick = async function (e) {
+            e.preventDefault();
+
+            if (!claim.userId) return alert("Missing claimant user ID");
+
+            const approvedRef = db.ref(
+              "approvedClaims/" + claim.userId + "/" + itemId
+            );
+            await approvedRef.set({
+              itemId: itemId,
+              itemType: item.itemType,
+              answer1: claim.answer1,
+              answer2: claim.answer2,
+              answer3: claim.answer3,
+              uploaderEmail: user.email,
+              department: item.department,
+              timestamp: new Date().toISOString(),
+            });
+
+            await itemRef.update({ status: true });
+            await claimRef.remove();
+
+            alert("Owner verified successfully.");
+            window.location.href = "review_item.html";
+          };
+
+          // ❌ REJECT
+          document.getElementById("rejectBtn").onclick = async function (e) {
+            e.preventDefault();
+            await claimRef.remove();
+            alert("Claim rejected.");
+            window.location.href = "review_item.html";
+          };
+        } catch (error) {
+          console.error("Error:", error);
+          alert("Something went wrong.");
+        }
+      });
+    </script>
+  </body>
+</html>

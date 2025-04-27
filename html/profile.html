@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <title>Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/profile.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-database-compat.js"></script>
+  </head>
+
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">FoundIt!</a>
+        </div>
+      </div>
+    </nav>
+
+    <div style="text-align: right; margin-right: 15px; margin-top: 10px">
+      <a href="user_dashboard.html">
+        <button class="btn btn-primary" type="button">Dashboard</button>
+      </a>
+    </div>
+
+    <!-- Profile Form -->
+    <div class="form" style="max-width: 600px; margin: 20px auto">
+      <div style="text-align: center">
+        <img
+          src="/images/profile_man.png"
+          alt="User Image"
+          class="profile-image"
+        />
+      </div>
+      <form class="form-horizontal" id="profileForm">
+        <div class="form-group">
+          <label class="control-label col-sm-2">Full Name:</label>
+          <div class="col-sm-10">
+            <input
+              type="text"
+              class="form-control"
+              id="fullname"
+              readonly
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="control-label col-sm-2">Email:</label>
+          <div class="col-sm-10">
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              readonly
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-group text-center">
+          <button type="button" id="editBtn" class="btn btn-warning">
+            Edit
+          </button>
+          <button
+            type="submit"
+            id="saveBtn"
+            class="btn btn-success"
+            style="display: none"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Firebase & JS Script -->
+    <script>
+      // Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const auth = firebase.auth();
+
+      const fullname = document.getElementById("fullname");
+      const email = document.getElementById("email");
+      const editBtn = document.getElementById("editBtn");
+      const saveBtn = document.getElementById("saveBtn");
+
+      let currentUserId = null;
+
+      // Load User Data
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          currentUserId = user.uid;
+          const userRef = db.ref("users/" + currentUserId);
+
+          userRef.once("value").then((snapshot) => {
+            const data = snapshot.val();
+            fullname.value = data.fullName || "";
+            email.value = data.email || user.email || "";
+          });
+        } else {
+          window.location.href = "login.html";
+        }
+      });
+
+      // Edit Button Functionality
+      editBtn.addEventListener("click", () => {
+        const isEditing = editBtn.textContent === "Cancel";
+
+        fullname.readOnly = isEditing;
+
+        saveBtn.style.display = isEditing ? "none" : "inline-block";
+        editBtn.textContent = isEditing ? "Edit" : "Cancel";
+      });
+
+      // Save Button Functionality
+      document.getElementById("profileForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        const userRef = db.ref("users/" + currentUserId);
+        userRef.update({
+          fullName: fullname.value.trim(),
+        });
+
+        fullname.readOnly = true;
+        editBtn.textContent = "Edit";
+        saveBtn.style.display = "none";
+
+        alert("Profile updated successfully.");
+      });
+    </script>
+  </body>
+</html>

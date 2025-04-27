@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login - FoundIt!</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+      body {
+        background-color: #f4f4f4;
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        max-width: 400px;
+        margin-top: 50px;
+      }
+      .panel {
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+      }
+      .panel-heading {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-control {
+        border-radius: 5px;
+      }
+      .btn-primary {
+        width: 100%;
+        border-radius: 5px;
+      }
+      .error-message {
+        color: red;
+        font-size: 14px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="panel panel-default">
+        <div class="panel-heading">Admin Login - FoundIt!</div>
+        <div class="panel-body">
+          <form id="adminLoginForm" onsubmit="return validateSecretCode()">
+            <!-- Secret Code -->
+            <div class="form-group">
+              <label for="secretCode">Enter Secret Code:</label>
+              <input
+                type="text"
+                class="form-control"
+                id="secretCode"
+                name="secretCode"
+                placeholder="Enter Secret Code"
+                required
+              />
+              <small id="secretCodeError" class="error-message"
+                >Incorrect Secret Code. Please try again.</small
+              >
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-primary">Login</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function validateSecretCode() {
+        const secretCodeInput = document.getElementById("secretCode").value;
+        const correctSecretCode = "12345"; // Replace with the actual secret code
+        const errorMessage = document.getElementById("secretCodeError");
+
+        // Check if the secret code is correct
+        if (secretCodeInput !== correctSecretCode) {
+          errorMessage.style.display = "block";
+          return false; // Prevent form submission if the code is incorrect
+        }
+
+        // Redirect to admin.html if the code is correct
+        window.location.href = "admin.html"; // Change the path if necessary
+        return false; // Prevent form submission since we're redirecting
+      }
+    </script>
+  </body>
+</html>

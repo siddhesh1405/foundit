@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports - Lost & Found</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Added jsPDF and AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+      .sidebar {
+        height: 100vh;
+        position: fixed;
+      }
+      .main-content {
+        margin-left: 16rem;
+        padding: 20px;
+      }
+    </style>
+  </head>
+
+  <body class="bg-gray-50 flex">
+    <!-- Sidebar -->
+    <div class="sidebar w-64 bg-indigo-800 text-white h-screen p-6">
+      <h1 class="text-3xl font-semibold mb-8">Admin Panel</h1>
+      <ul class="space-y-4">
+        <li>
+          <a href="admin.html" class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Dashboard</a
+          >
+        </li>
+        <li>
+          <a
+            href="user-management.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >User Management</a
+          >
+        </li>
+        <li>
+          <a
+            href="lost-found.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Lost & Found Items</a
+          >
+        </li>
+        <li>
+          <a
+            href="manage-claim.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Manage Claims</a
+          >
+        </li>
+        <li>
+          <a href="reports.html" class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Reports</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            id="logoutButton"
+            >Logout</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content flex-1 p-6">
+      <h1 class="text-4xl font-semibold text-center text-indigo-700 mb-8">
+        Reports
+      </h1>
+
+      <!-- Overview Summary -->
+      <div class="grid grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 class="text-xl font-semibold text-indigo-700">
+            Total Lost Items
+          </h2>
+          <p id="totalLostItems" class="text-3xl font-bold">0</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md text-center">
+          <h2 class="text-xl font-semibold text-indigo-700">Total Claims</h2>
+          <p id="totalClaims" class="text-3xl font-bold">0</p>
+        </div>
+      </div>
+
+      <!-- Breakdown of Claims -->
+      <div class="overflow-x-auto mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">
+          Claims Breakdown
+        </h2>
+        <table class="min-w-full table-auto bg-white rounded-lg shadow-lg">
+          <thead>
+            <tr class="bg-indigo-700 text-white">
+              <th class="px-6 py-4 text-left">Claim Status</th>
+              <th class="px-6 py-4 text-left">Count</th>
+            </tr>
+          </thead>
+          <tbody id="claimsBreakdownTable">
+            <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- List of Lost Items -->
+      <div class="overflow-x-auto mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">
+          Lost Items List
+        </h2>
+        <table class="min-w-full table-auto bg-white rounded-lg shadow-lg">
+          <thead>
+            <tr class="bg-indigo-700 text-white">
+              <th class="px-6 py-4 text-left">Item Type</th>
+              <th class="px-6 py-4 text-left">Full Name</th>
+            </tr>
+          </thead>
+          <tbody id="lostItemsTable">
+            <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Export Button -->
+      <div class="text-center">
+        <button
+          class="bg-indigo-600 text-white py-2 px-6 rounded-lg"
+          onclick="exportReport()"
+        >
+          Export Report (PDF)
+        </button>
+      </div>
+    </div>
+
+    <!-- Firebase and Logic -->
+    <script>
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      // Load total counts
+      function loadTotalCounts() {
+        const returnedItemsRef = db.ref("returnedItems");
+        returnedItemsRef.once("value", (snapshot) => {
+          let totalLostItems = 0;
+          snapshot.forEach((itemSnapshot) => {
+            const item = itemSnapshot.val();
+            totalLostItems++;
+          });
+          document.getElementById("totalLostItems").textContent =
+            totalLostItems;
+        });
+
+        returnedItemsRef.once("value", (snapshot) => {
+          const totalClaims = snapshot.numChildren();
+          document.getElementById("totalClaims").textContent = totalClaims;
+        });
+      }
+
+      // Load claims breakdown
+      function loadClaimsBreakdown() {
+        const returnedItemsRef = db.ref("returnedItems");
+        returnedItemsRef.once("value", (snapshot) => {
+          let approvedCount = 0;
+          snapshot.forEach((itemSnapshot) => {
+            const item = itemSnapshot.val();
+            if (item.status === true) {
+              approvedCount++;
+            }
+          });
+
+          const claimsHTML = `
+            <tr>
+              <td class="px-6 py-4">Approved</td>
+              <td class="px-6 py-4">${approvedCount}</td>
+            </tr>
+          `;
+
+          document.getElementById("claimsBreakdownTable").innerHTML =
+            claimsHTML;
+        });
+      }
+
+      // Load lost items
+      function loadLostItems() {
+        const returnedItemsRef = db.ref("returnedItems");
+        returnedItemsRef.once("value", (snapshot) => {
+          let lostItemsHTML = "";
+          snapshot.forEach((itemSnapshot) => {
+            const item = itemSnapshot.val();
+            if (item.status === false) {
+              lostItemsHTML += `
+                <tr>
+                  <td class="px-6 py-4">${item.itemType}</td>
+                  <td class="px-6 py-4">${item.fullName}</td>
+                </tr>
+              `;
+            }
+          });
+          document.getElementById("lostItemsTable").innerHTML = lostItemsHTML;
+        });
+      }
+      // Export Report as PDF
+      async function exportReport() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const returnedItemsRef = db.ref("returnedItems");
+
+        returnedItemsRef.once("value", (snapshot) => {
+          const rows = [];
+          let lostItemCount = 0;
+          let totalClaims = snapshot.numChildren(); // Total claims = total entries
+
+          snapshot.forEach((itemSnapshot) => {
+            const item = itemSnapshot.val();
+            if (item.status === false) {
+              rows.push([item.itemType || "N/A", item.fullName || "N/A"]);
+              lostItemCount++;
+            }
+          });
+
+          if (rows.length === 0) {
+            alert("No lost items found to export.");
+            return;
+          }
+
+          // Title
+          doc.setFontSize(18);
+          doc.text("FoundIt", 14, 22);
+
+          // Table
+          doc.autoTable({
+            startY: 30,
+            head: [["Item Type", "Full Name"]],
+            body: rows,
+            theme: "grid",
+          });
+
+          // After the table, add totals
+          const finalY = doc.lastAutoTable.finalY || 40;
+          doc.setFontSize(14);
+          doc.text(`Total Lost Items: ${lostItemCount}`, 14, finalY + 10);
+          doc.text(`Total Claims: ${totalClaims}`, 14, finalY + 20);
+
+          // Save PDF
+          doc.save("foundit_report.pdf");
+        });
+      }
+
+      // Initialize loading
+      loadTotalCounts();
+      loadClaimsBreakdown();
+      loadLostItems();
+    </script>
+  </body>
+</html>

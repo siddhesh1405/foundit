@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FoundIt - Welcome</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="h-screen w-screen overflow-hidden">
+    <!-- Background Image Section -->
+    <div class="relative h-full w-full">
+      <img
+        src="/images/college.jpg"
+        alt="FoundIt Background"
+        class="object-cover h-full w-full"
+      />
+
+      <!-- Overlay -->
+      <div
+        class="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-center px-4"
+      >
+        <!-- Heading -->
+        <h1 class="text-white text-4xl md:text-6xl font-bold mb-4">
+          Welcome to FoundIt!
+        </h1>
+
+        <!-- Subheading / Description -->
+        <p class="text-gray-200 text-lg md:text-2xl max-w-2xl mb-8">
+          The easiest way to report lost items and reunite with your belongings.
+          Whether you lost something or found something, we're here to help!
+        </p>
+
+        <!-- Get Started Button -->
+        <a
+          href="/html/index.html"
+          class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-full text-lg transition duration-300"
+        >
+          Get Started
+        </a>
+      </div>
+    </div>
+  </body>
+</html>

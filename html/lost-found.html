@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lost & Found Items</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+      /* Make the sidebar take full height of the page */
+      .sidebar {
+        height: 100vh;
+        position: fixed;
+      }
+      .main-content {
+        margin-left: 16rem; /* Make room for sidebar */
+        padding: 20px;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 flex">
+    <!-- Sidebar -->
+    <div class="sidebar w-64 bg-indigo-800 text-white h-screen p-6">
+      <h1 class="text-3xl font-semibold mb-8">Admin Panel</h1>
+      <ul class="space-y-4">
+        <li>
+          <a href="admin.html" class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Dashboard</a
+          >
+        </li>
+        <li>
+          <a
+            href="user-management.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >User Management</a
+          >
+        </li>
+        <li>
+          <a
+            href="lost-found.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Lost & Found Items</a
+          >
+        </li>
+        <li>
+          <a
+            href="manage-claim.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Manage Claims</a
+          >
+        </li>
+        <li>
+          <a href="reports.html" class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Reports</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            id="logoutButton"
+            >Logout</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content flex-1 p-6">
+      <h1 class="text-4xl font-semibold text-center text-indigo-700 mb-8">
+        Lost & Found Items
+      </h1>
+
+      <!-- Tables for Approved Claims, Claim Requests, and Returned Items -->
+      <div class="overflow-x-auto mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">
+          Approved Claims
+        </h2>
+        <table class="min-w-full table-auto bg-white rounded-lg shadow-lg">
+          <thead>
+            <tr class="bg-indigo-700 text-white">
+              <th class="px-6 py-4 text-left">Item Name</th>
+              <th class="px-6 py-4 text-left">Claimant</th>
+
+              <th class="px-6 py-4 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="approvedClaimsTable">
+            <!-- Dynamically populated items will go here -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="overflow-x-auto mb-6">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">
+          Claim Requests
+        </h2>
+        <table class="min-w-full table-auto bg-white rounded-lg shadow-lg">
+          <thead>
+            <tr class="bg-indigo-700 text-white">
+              <th class="px-6 py-4 text-left">Item Name</th>
+              <th class="px-6 py-4 text-left">Claimant</th>
+              <th class="px-6 py-4 text-left">Status</th>
+              <th class="px-6 py-4 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="claimRequestsTable">
+            <!-- Dynamically populated items will go here -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="overflow-x-auto">
+        <h2 class="text-2xl font-semibold text-indigo-700 mb-4">
+          Returned Items
+        </h2>
+        <table class="min-w-full table-auto bg-white rounded-lg shadow-lg">
+          <thead>
+            <tr class="bg-indigo-700 text-white">
+              <th class="px-6 py-4 text-left">Item Name</th>
+              <th class="px-6 py-4 text-left">Returned By</th>
+              <th class="px-6 py-4 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="returnedItemsTable">
+            <!-- Dynamically populated items will go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Firebase Script for Data -->
+    <script>
+      // Initialize Firebase (use your actual config)
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      // Function to load approved claims data in real-time
+      function loadApprovedClaims() {
+        const approvedClaimsRef = db.ref("approvedClaims");
+
+        approvedClaimsRef.on("value", (snapshot) => {
+          const approvedClaims = snapshot.val();
+          let claimsHTML = "";
+
+          if (approvedClaims) {
+            Object.keys(approvedClaims).forEach((userId) => {
+              Object.keys(approvedClaims[userId]).forEach((itemId) => {
+                const item = approvedClaims[userId][itemId];
+                claimsHTML += `
+                  <tr>
+                    <td class="px-6 py-4">${item.itemType}</td>
+                    <td class="px-6 py-4">${item.uploaderEmail}</td>
+                    
+                    <td class="px-6 py-4">
+                      <button class="text-red-500" onclick="deleteItem('approvedClaims', '${userId}', '${itemId}')">Delete</button>
+                    </td>
+                  </tr>
+                `;
+              });
+            });
+          }
+          document.getElementById("approvedClaimsTable").innerHTML = claimsHTML;
+        });
+      }
+
+      // Function to load claim requests data in real-time
+      function loadClaimRequests() {
+        const claimRequestsRef = db.ref("claimRequests");
+
+        claimRequestsRef.on("value", (snapshot) => {
+          const claimRequests = snapshot.val();
+          let claimRequestsHTML = "";
+
+          if (claimRequests) {
+            Object.keys(claimRequests).forEach((userId) => {
+              Object.keys(claimRequests[userId]).forEach((itemId) => {
+                const item = claimRequests[userId][itemId];
+                claimRequestsHTML += `
+                  <tr>
+                    <td class="px-6 py-4">${item.itemId}</td>
+                    <td class="px-6 py-4">${item.userEmail}</td>
+                    <td class="px-6 py-4">${item.status}</td>
+                    <td class="px-6 py-4">
+                      <button class="text-red-500" onclick="deleteItem('claimRequests', '${userId}', '${itemId}')">Delete</button>
+                    </td>
+                  </tr>
+                `;
+              });
+            });
+          }
+          document.getElementById("claimRequestsTable").innerHTML =
+            claimRequestsHTML;
+        });
+      }
+
+      // Function to load returned items data in real-time
+      function loadReturnedItems() {
+        const returnedItemsRef = db.ref("returnedItems");
+
+        returnedItemsRef.on("value", (snapshot) => {
+          const returnedItems = snapshot.val();
+          let returnedItemsHTML = "";
+
+          if (returnedItems) {
+            Object.keys(returnedItems).forEach((itemId) => {
+              const item = returnedItems[itemId];
+              returnedItemsHTML += `
+                <tr>
+                  <td class="px-6 py-4">${item.itemType}</td>
+                  <td class="px-6 py-4">${item.fullName}</td>
+                  <td class="px-6 py-4">
+                    <button class="text-red-500" onclick="deleteItem('returnedItems', '', '${itemId}')">Delete</button>
+                  </td>
+                </tr>
+              `;
+            });
+          }
+          document.getElementById("returnedItemsTable").innerHTML =
+            returnedItemsHTML;
+        });
+      }
+
+      // Function to delete item from Firebase
+      function deleteItem(table, userId, itemId) {
+        const itemRef = db.ref(
+          `${table}/${userId ? userId + "/" : ""}${itemId}`
+        );
+        itemRef
+          .remove()
+          .then(() => {
+            alert("Item deleted successfully");
+            loadApprovedClaims(); // Reload data after deletion
+            loadClaimRequests();
+            loadReturnedItems();
+          })
+          .catch((error) => {
+            alert("Error deleting item: " + error.message);
+          });
+      }
+
+      // Call the functions to load data in real-time
+      loadApprovedClaims();
+      loadClaimRequests();
+      loadReturnedItems();
+    </script>
+  </body>
+</html>

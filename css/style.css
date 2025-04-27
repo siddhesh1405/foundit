@@ -1,0 +1,16 @@
+.selector-for-some-widget {
+    box-sizing: content-box;
+  }
+
+.form{
+      width: 40%;
+      height:100%;
+      margin: 0 auto;
+      margin-top: 10%;
+    
+}
+
+
+body{
+  background-image: url("/images/SL-011719-17920-65.jpg");
+}

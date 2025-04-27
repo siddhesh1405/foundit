@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Management</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body class="bg-gray-50 flex">
+    <!-- Sidebar -->
+    <div class="w-64 bg-indigo-800 text-white h-screen p-6">
+      <h1 class="text-3xl font-semibold mb-8">Admin Panel</h1>
+      <ul class="space-y-4">
+        <li>
+          <a href="admin.html" class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Dashboard</a
+          >
+        </li>
+        <li>
+          <a
+            href="user-management.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >User Management</a
+          >
+        </li>
+        <li>
+          <a
+            href="lost-found.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            id="lostFoundLink"
+            >Lost & Found Items</a
+          >
+        </li>
+        <li>
+          <a
+            href="manage-claim.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            id="manageClaimsLink"
+            >Manage Claims</a
+          >
+        </li>
+        <li>
+          <a
+            href="reports.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            id="reportsLink"
+            >Reports</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            id="logoutButton"
+            >Logout</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+      <h1 class="text-4xl font-semibold text-center text-indigo-700 mb-8">
+        User Management
+      </h1>
+      <div class="overflow-x-auto">
+        <table class="min-w-full table-auto bg-white rounded-lg shadow-lg">
+          <thead>
+            <tr class="bg-indigo-700 text-white">
+              <th class="px-6 py-4 text-left">User ID</th>
+              <th class="px-6 py-4 text-left">Email</th>
+              <th class="px-6 py-4 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="userList">
+            <!-- Dynamically populated user list will go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Firebase Script for User Management -->
+    <script>
+      // Initialize Firebase (use your actual config)
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      // Function to display users
+      function loadUsers() {
+        db.ref("users").once("value", (snapshot) => {
+          let usersHTML = "";
+          snapshot.forEach((childSnapshot) => {
+            const user = childSnapshot.val();
+            const userId = childSnapshot.key;
+            usersHTML += `
+              <tr>
+                <td class="px-6 py-4">${userId}</td>
+                <td class="px-6 py-4">${user.email}</td>
+                <td class="px-6 py-4">
+                  <button class="text-red-500" onclick="deleteUser('${userId}')">Delete</button>
+                </td>
+              </tr>
+            `;
+          });
+          document.getElementById("userList").innerHTML = usersHTML;
+        });
+      }
+
+      // Delete user function
+      function deleteUser(userId) {
+        db.ref("users/" + userId)
+          .remove()
+          .then(() => {
+            alert("User deleted successfully");
+            loadUsers(); // Reload user list after deletion
+          })
+          .catch((error) => {
+            console.error("Error deleting user: ", error);
+          });
+      }
+
+      // Logout function (Firebase Authentication)
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", function () {
+          firebase
+            .auth()
+            .signOut()
+            .then(() => {
+              alert("Logged out successfully.");
+              window.location.href = "login.html"; // Redirect to login page after logout
+            })
+            .catch((error) => {
+              console.error("Error logging out: ", error);
+            });
+        });
+
+      // Links functionality
+      document
+        .getElementById("lostFoundLink")
+        .addEventListener("click", function () {
+          window.location.href = "lost-found.html"; // Redirect to Lost & Found page
+        });
+
+      document
+        .getElementById("manageClaimsLink")
+        .addEventListener("click", function () {
+          window.location.href = "manage-claims.html"; // Redirect to Manage Claims page
+        });
+
+      document
+        .getElementById("reportsLink")
+        .addEventListener("click", function () {
+          window.location.href = "reports.html"; // Redirect to Reports page
+        });
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", function () {
+          firebase
+            .auth()
+            .signOut()
+            .then(() => {
+              // Redirect to login/home page after successful logout
+              window.location.href = "index.html";
+            })
+            .catch((error) => {
+              console.error("Error signing out:", error);
+              alert("Error logging out. Please try again.");
+            });
+        });
+      // Load users on page load
+      loadUsers();
+    </script>
+  </body>
+</html>

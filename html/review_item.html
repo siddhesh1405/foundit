@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <title>Review Item</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/review_item.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <style>
+      .template-card {
+        display: none;
+      }
+    </style>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+      import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+        measurementId: "G-0VTTZPM3XE",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      const db = getDatabase(app);
+      const dbRef = ref(db);
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        const userId = user.uid;
+        const returnedItemsSnapshot = await get(child(dbRef, "returnedItems"));
+        const claimRequestsSnapshot = await get(child(dbRef, "claimRequests"));
+
+        const returnedItems = returnedItemsSnapshot.exists() ? returnedItemsSnapshot.val() : {};
+        const claimRequests = claimRequestsSnapshot.exists() ? claimRequestsSnapshot.val() : {};
+
+        const template = document.querySelector(".template-card");
+        const container = document.getElementById("cardsContainer");
+
+        Object.entries(returnedItems).forEach(([itemId, itemData]) => {
+          if (itemData.uid === userId && claimRequests[itemId]) {
+            Object.entries(claimRequests[itemId]).forEach(([claimId, claimData]) => {
+              const clone = template.cloneNode(true);
+              clone.classList.remove("template-card");
+
+              clone.querySelector("#itemType").innerText = itemData.itemType || "N/A";
+              clone.querySelector("#foundBy").innerText = claimData.userEmail || "N/A";
+              clone.querySelector("#department").innerText = itemData.department || "N/A";
+              clone.querySelector("a").href = `review_answer.html?itemId=${itemId}&claimId=${claimId}`;
+
+              clone.style.display = "block";
+              container.appendChild(clone);
+            });
+          }
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">FoundIt!</a>
+        </div>
+      </div>
+    </nav>
+
+    <a href="user_dashboard.html">
+      <button class="btn2 btn-primary" type="submit">Dashboard</button>
+    </a>
+
+    <div class="card1">
+      <h1>Review Answers</h1>
+      <h4>Owner Verification</h4>
+      <br />
+    </div>
+
+    <div id="cardsContainer">
+      <div class="card template-card">
+        <h2>Item Type - <span id="itemType">Key</span></h2>
+        <div class="info"><strong>Claimed By</strong> <span id="foundBy">Email</span></div>
+        <div class="info"><strong>Department</strong> <span id="department">Dept</span></div>
+        <a href="#"><button class="btn1">Review Answer</button></a>
+      </div>
+    </div>
+  </body>
+</html>

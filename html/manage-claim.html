@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Claims</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body class="bg-gray-50 flex">
+    <!-- Sidebar -->
+    <div class="w-64 bg-indigo-800 text-white h-screen p-6">
+      <h1 class="text-3xl font-semibold mb-8">Admin Panel</h1>
+      <ul class="space-y-4">
+        <li>
+          <a href="admin.html" class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Dashboard</a
+          >
+        </li>
+        <li>
+          <a
+            href="user-management.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >User Management</a
+          >
+        </li>
+        <li>
+          <a
+            href="lost-found.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Lost & Found Items</a
+          >
+        </li>
+        <li>
+          <a
+            href="manage-claim.html"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Manage Claims</a
+          >
+        </li>
+        <li>
+          <a href="reports.html" class="text-lg hover:bg-indigo-700 p-2 rounded"
+            >Reports</a
+          >
+        </li>
+        <li>
+          <a
+            href="#"
+            class="text-lg hover:bg-indigo-700 p-2 rounded"
+            id="logoutButton"
+            >Logout</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 p-6">
+      <h1 class="text-4xl font-semibold text-center text-indigo-700 mb-8">
+        Manage Claims
+      </h1>
+      <div class="overflow-x-auto">
+        <table class="min-w-full table-auto bg-white rounded-lg shadow-lg">
+          <thead>
+            <tr class="bg-indigo-700 text-white">
+              <th class="px-6 py-4 text-left">Claim ID</th>
+              <th class="px-6 py-4 text-left">User</th>
+              <th class="px-6 py-4 text-left">Item</th>
+              <th class="px-6 py-4 text-left">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="claimList">
+            <!-- Dynamically populated claim list will go here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Firebase Script for Managing Claims -->
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+
+      function loadClaims() {
+        db.ref("claims").once("value", (snapshot) => {
+          let claimsHTML = "";
+          snapshot.forEach((childSnapshot) => {
+            const claim = childSnapshot.val();
+            const claimId = childSnapshot.key;
+            claimsHTML += `
+              <tr>
+                <td class="px-6 py-4">${claimId}</td>
+                <td class="px-6 py-4">${claim.user}</td>
+                <td class="px-6 py-4">${claim.item}</td>
+                <td class="px-6 py-4">
+                  <button class="text-green-500" onclick="approveClaim('${claimId}')">Approve</button>
+                  <button class="text-red-500" onclick="rejectClaim('${claimId}')">Reject</button>
+                </td>
+              </tr>
+            `;
+          });
+          document.getElementById("claimList").innerHTML = claimsHTML;
+        });
+      }
+
+      function approveClaim(claimId) {
+        db.ref("claims/" + claimId)
+          .update({ status: "Approved" })
+          .then(() => {
+            alert("Claim approved!");
+            loadClaims(); // Reload claims list
+          });
+      }
+
+      function rejectClaim(claimId) {
+        db.ref("claims/" + claimId)
+          .update({ status: "Rejected" })
+          .then(() => {
+            alert("Claim rejected!");
+            loadClaims(); // Reload claims list
+          });
+      }
+
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", function () {
+          firebase
+            .auth()
+            .signOut()
+            .then(() => {
+              alert("Logged out successfully.");
+              window.location.href = "login.html"; // Redirect to login page after logout
+            })
+            .catch((error) => {
+              console.error("Error logging out: ", error);
+            });
+        });
+
+      // Load claims on page load
+      loadClaims();
+    </script>
+  </body>
+</html>

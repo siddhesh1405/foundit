@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Approved Claims - FoundIt!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/find_item.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script
+      src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"
+      defer
+    ></script>
+    <script
+      src="https://www.gstatic.com/firebasejs/11.6.0/firebase-auth-compat.js"
+      defer
+    ></script>
+    <script
+      src="https://www.gstatic.com/firebasejs/11.6.0/firebase-database-compat.js"
+      defer
+    ></script>
+    <script type="module" src="/js/approved_items.js"></script>
+    <style>
+      .card {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 15px auto;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .card h3 {
+        margin-top: 0;
+        color: #333;
+      }
+      .card .info {
+        margin: 8px 0;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">FoundIt!</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="head-container">
+      <h1 class="head">Approved Items</h1>
+      <a href="user_dashboard.html">
+        <button class="btn2 btn-primary" type="button">Dashboard</button>
+      </a>
+    </div>
+
+    <div id="cardContainer"></div>
+  </body>
+</html>

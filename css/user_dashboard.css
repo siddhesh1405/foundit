@@ -1,0 +1,73 @@
+.selector-for-some-widget {
+    box-sizing: content-box;
+  }
+
+  body{
+    background-image: url("/images/SL-011719-17920-65.jpg");
+  }
+
+.form{
+      margin-left: 10%;
+      width: 40%;
+      height:100%;
+      margin-top: 5%;
+    
+}.card {
+  width: max-content;
+  height: max-content;
+  margin: 50px auto; /* Centering the container horizontally */
+  display: flex;
+  gap: 5vw; /* Adjust spacing between cards (reduced gap) */
+  justify-content: center; /* Center content horizontally */
+  align-items: center; /* Center content vertically */
+}
+
+.cards {
+  height: 300px;
+  width: 300px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.305);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column; /* Ensures the image and text are stacked vertically */
+  align-items: center; /* Center content horizontally within the card */
+  justify-content: center; /* Center content vertically within the card */
+  text-align: center;
+  font-size: 20px; /* Adjust text size */
+  font-weight: bold; /* Makes text stand out */
+  background-color: white;
+}
+
+.card-img {
+  width: 60%; /* Adjust image width to fit better within the card */
+  height: auto; /* Ensure aspect ratio is maintained */
+  margin-bottom: 10px; /* Space between image and text */
+}
+.btn-container {
+  position: fixed;
+  top: 80px; /* Adjust based on navbar height */
+  right: 20px;
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  z-index: 1000;
+}
+
+.btn2 {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.btn2:hover {
+  background-color: #0056b3;
+}
+
+.logout-btn {
+  background-color: #dc3545; /* Red color for logout */
+}
+
+.logout-btn:hover {
+  background-color: #a71d2a;
+}

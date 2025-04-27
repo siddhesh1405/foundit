@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- For Graphs -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body class="bg-gray-50">
+    <div class="flex">
+      <!-- Sidebar -->
+      <div class="bg-gray-800 text-white w-64 min-h-screen p-6">
+        <h1 class="text-2xl font-semibold mb-6 text-center">Admin Dashboard</h1>
+        <ul class="space-y-4">
+          <!-- Dashboard Overview -->
+          <li>
+            <a href="admin.html" class="hover:bg-gray-700 p-2 rounded"
+              >Dashboard Overview</a
+            >
+          </li>
+
+          <!-- User Management -->
+          <li>
+            <a href="user-management.html" class="hover:bg-gray-700 p-2 rounded"
+              >User Management</a
+            >
+          </li>
+
+          <!-- Lost and Found Items -->
+          <li>
+            <a href="#" class="hover:bg-gray-700 p-2 rounded"
+              >Lost and Found Items</a
+            >
+          </li>
+
+          <!-- Manage Claims -->
+          <li>
+            <a href="manage-claim.html" class="hover:bg-gray-700 p-2 rounded"
+              >Manage Claims</a
+            >
+          </li>
+
+          <!-- Reports -->
+          <li>
+            <a href="reports.html" class="hover:bg-gray-700 p-2 rounded"
+              >Reports</a
+            >
+          </li>
+
+          <!-- Logout -->
+          <li>
+            <a
+              href="get_started.html"
+              class="hover:bg-gray-700 p-2 rounded"
+              id="logoutButton"
+            >
+              Logout
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Main Content -->
+      <div class="flex-1 p-6">
+        <h1 class="text-4xl font-semibold text-center text-indigo-700 mb-8">
+          Admin Dashboard
+        </h1>
+
+        <!-- Dashboard Overview Section -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Total Users -->
+          <div
+            class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300"
+          >
+            <h4 class="text-lg font-medium">Total Users</h4>
+            <h3 id="totalUsers" class="text-4xl font-bold">Loading...</h3>
+          </div>
+
+          <!-- Lost Items -->
+          <div
+            class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300"
+          >
+            <h4 class="text-lg font-medium">Lost Items</h4>
+            <h3 id="lostItems" class="text-4xl font-bold">Loading...</h3>
+          </div>
+
+          <!-- Found Items -->
+          <div
+            class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300"
+          >
+            <h4 class="text-lg font-medium">Found Items</h4>
+            <h3 id="foundItems" class="text-4xl font-bold">Loading...</h3>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
+          <!-- Approved Claims -->
+          <div
+            class="bg-gradient-to-r from-gray-700 to-gray-800 text-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300"
+          >
+            <h4 class="text-lg font-medium">Approved Claims</h4>
+            <div id="approvedClaimsList" class="space-y-4">
+              <!-- Dynamic approved claims will be displayed here -->
+            </div>
+          </div>
+
+          <!-- Graph of Found Items Over Time -->
+          <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h4 class="text-lg font-medium mb-4">Found Items Statistics</h4>
+            <canvas id="foundItemsChart" class="w-full h-64"></canvas>
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <!-- Returned Items -->
+          <div
+            class="bg-gradient-to-r from-pink-500 to-pink-600 text-white p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300"
+          >
+            <h4 class="text-lg font-medium">Returned Items</h4>
+            <h3 id="returnedItems" class="text-4xl font-bold">Loading...</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase and Dashboard Scripts -->
+    <script>
+      // Initialize Firebase (add your Firebase config here)
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      // Logout functionality
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", function () {
+          firebase
+            .auth()
+            .signOut()
+            .then(() => {
+              // Sign-out successful
+              window.location.href = "index.html"; // Redirect to login/home page
+            })
+            .catch((error) => {
+              console.error("Error signing out:", error);
+              alert("Error logging out. Please try again.");
+            });
+        });
+      // Function to update the dashboard
+      function updateDashboard() {
+        // Total Users
+        db.ref("users").once("value", (snapshot) => {
+          document.getElementById("totalUsers").textContent =
+            snapshot.numChildren();
+        });
+
+        // Lost Items with status false
+        db.ref("returnedItems").once("value", (snapshot) => {
+          let lostCount = 0;
+          snapshot.forEach((childSnapshot) => {
+            const returnedItem = childSnapshot.val();
+            if (returnedItem.status === false) {
+              lostCount++;
+            }
+          });
+          document.getElementById("lostItems").textContent = lostCount;
+        });
+
+        // Found Items with status true
+        db.ref("returnedItems").once("value", (snapshot) => {
+          let foundCount = 0;
+          snapshot.forEach((childSnapshot) => {
+            const returnedItem = childSnapshot.val();
+            if (returnedItem.status === true) {
+              foundCount++;
+            }
+          });
+          document.getElementById("foundItems").textContent = foundCount;
+        });
+
+        // Approved Claims
+        db.ref("approvedClaims").once("value", (snapshot) => {
+          let approvedClaimsHTML = "";
+          snapshot.forEach((userClaims) => {
+            userClaims.forEach((claimData) => {
+              const claim = claimData.val();
+              approvedClaimsHTML += ` 
+                <div class="border-b pb-4">
+                  <p><strong>Item Type:</strong> ${claim.itemType}</p>
+                  <p><strong>Uploader Email:</strong> ${claim.uploaderEmail}</p>
+                  <p><strong>Department:</strong> ${claim.department}</p>
+                  <p><strong>Claim Answer 1:</strong> ${claim.answer1}</p>
+                  <p><strong>Claim Answer 2:</strong> ${claim.answer2}</p>
+                  <p><strong>Claim Answer 3:</strong> ${claim.answer3}</p>
+                  <p><strong>Timestamp:</strong> ${new Date(
+                    claim.timestamp
+                  ).toLocaleString()}</p>
+                </div>
+              `;
+            });
+          });
+          document.getElementById("approvedClaimsList").innerHTML =
+            approvedClaimsHTML;
+        });
+
+        // Found Items Over Time (Graph)
+        db.ref("returnedItems").once("value", (snapshot) => {
+          let foundItemsData = {};
+
+          snapshot.forEach((childSnapshot) => {
+            const returnedItem = childSnapshot.val();
+            if (returnedItem.status === true) {
+              const date = new Date(
+                returnedItem.timestamp
+              ).toLocaleDateString();
+              foundItemsData[date] = (foundItemsData[date] || 0) + 1;
+            }
+          });
+
+          const labels = Object.keys(foundItemsData); // Dates
+          const data = Object.values(foundItemsData); // Counts of found items
+
+          // Create a chart
+          const ctx = document
+            .getElementById("foundItemsChart")
+            .getContext("2d");
+
+          new Chart(ctx, {
+            type: "line",
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Found Items Over Time",
+                  data: data,
+                  borderColor: "#34D399",
+                  backgroundColor: "rgba(52, 211, 153, 0.2)",
+                  fill: true,
+                },
+              ],
+            },
+            options: {
+              scales: {
+                y: {
+                  ticks: {
+                    beginAtZero: true,
+                    stepSize: 1, // Adjust this value based on the data's range
+                  },
+                },
+              },
+            },
+          });
+        });
+
+        // Returned Items
+        db.ref("returnedItems").once("value", (snapshot) => {
+          let returnedCount = snapshot.numChildren();
+          document.getElementById("returnedItems").textContent = returnedCount;
+        });
+      }
+
+      // Initialize Dashboard
+      updateDashboard();
+    </script>
+  </body>
+</html>

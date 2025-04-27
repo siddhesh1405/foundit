@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Claim Item</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/claim_item.css" />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">FoundIt!</a>
+        </div>
+      </div>
+    </nav>
+
+    <a href="find_item.html">
+      <button class="btn2 btn-primary" type="button">Back</button>
+    </a>
+
+    <div class="card">
+      <h1>Security Check</h1>
+      <h4>Answer the below questions.</h4>
+      <br />
+
+      <form id="questionForm" class="form-horizontal">
+        <div class="form-group">
+          <label id="label1" class="control-label" for="que1">Loading...</label>
+          <input
+            type="text"
+            class="form-control"
+            id="que1"
+            name="answer1"
+            placeholder="Answer"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label id="label2" class="control-label" for="que2">Loading...</label>
+          <input
+            type="text"
+            class="form-control"
+            id="que2"
+            name="answer2"
+            placeholder="Answer"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label id="label3" class="control-label" for="que3">Loading...</label>
+          <input
+            type="text"
+            class="form-control"
+            id="que3"
+            name="answer3"
+            placeholder="Answer"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <div class="col-sm-offset-5 col-sm-10">
+            <button type="submit" class="btn btn-default">Submit</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      // ✅ Firebase config
+      const firebaseConfig = {
+        apiKey: "AIzaSyBbyVa-ZQlyPhf_y3Tm32VI6-aiRLjxPqg",
+        authDomain: "foundit-1393d.firebaseapp.com",
+        projectId: "foundit-1393d",
+        storageBucket: "foundit-1393d.appspot.com",
+        messagingSenderId: "111188176676",
+        appId: "1:111188176676:web:9fddd7fbd3318125890db1",
+        measurementId: "G-0VTTZPM3XE",
+        databaseURL: "https://foundit-1393d-default-rtdb.firebaseio.com/",
+      };
+
+      // ✅ Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      const auth = firebase.auth();
+
+      // ✅ Get itemId from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const itemId = urlParams.get("itemId");
+
+      // Default questions in case missing
+      let question1 = "Question 1";
+      let question2 = "Question 2";
+      let question3 = "Question 3";
+
+      // ✅ Load questions dynamically
+      if (itemId) {
+        const itemRef = db.ref("returnedItems/" + itemId);
+        itemRef
+          .get()
+          .then((snapshot) => {
+            if (snapshot.exists()) {
+              const item = snapshot.val();
+              question1 = item.question1 || "Question 1";
+              question2 = item.question2 || "Question 2";
+              question3 = item.question3 || "Question 3";
+              document.getElementById("label1").innerText = question1;
+              document.getElementById("label2").innerText = question2;
+              document.getElementById("label3").innerText = question3;
+            } else {
+              alert("Item not found.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching item:", error);
+          });
+      } else {
+        alert("Missing item ID in URL.");
+      }
+
+      // ✅ Handle form submission
+      document
+        .getElementById("questionForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          const ans1 = document.getElementById("que1").value.trim();
+          const ans2 = document.getElementById("que2").value.trim();
+          const ans3 = document.getElementById("que3").value.trim();
+
+          if (!ans1 || !ans2 || !ans3) {
+            alert("Please answer all questions before submitting.");
+            return;
+          }
+
+          auth.onAuthStateChanged(function (user) {
+            if (user) {
+              const claimData = {
+                itemId: itemId,
+                answer1: ans1,
+                answer2: ans2,
+                answer3: ans3,
+                question1: question1,
+                question2: question2,
+                question3: question3,
+                userId: user.uid,
+                userEmail: user.email || "N/A",
+                timestamp: new Date().toISOString(),
+                status: "Pending",
+              };
+
+              const claimsRef = db.ref("claimRequests/" + itemId);
+              claimsRef
+                .push(claimData)
+                .then(() => {
+                  alert("Your claim request has been submitted successfully!");
+                  window.location.href = "/html/user_dashboard.html";
+                })
+                .catch((error) => {
+                  console.error("Error submitting claim:", error);
+                  alert(
+                    "There was an error submitting your request. Please try again later."
+                  );
+                });
+            } else {
+              alert("You must be logged in to submit a claim.");
+              window.location.href = "login.html";
+            }
+          });
+        });
+    </script>
+  </body>
+</html>
